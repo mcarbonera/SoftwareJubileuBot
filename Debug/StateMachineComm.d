@@ -13,6 +13,7 @@ StateMachineComm.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/inc
 StateMachineComm.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/stdbool.h
 StateMachineComm.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h
 StateMachineComm.obj: ../driverlib/uart.h
+StateMachineComm.obj: ../StateMachineGeneric.h
 
 ../StateMachineComm.c: 
 ../StateMachineComm.h: 
@@ -27,3 +28,4 @@ C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/sys/_stdint.h:
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/stdbool.h: 
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h: 
 ../driverlib/uart.h: 
+../StateMachineGeneric.h: 

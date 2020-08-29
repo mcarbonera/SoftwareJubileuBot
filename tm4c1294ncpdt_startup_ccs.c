@@ -40,9 +40,7 @@ static void IntDefaultHandler(void);
 // processor is started
 //
 //*****************************************************************************
-#ifndef MAIN_H
-    #include "main.h"
-#endif
+#include "main.h"
 
 extern void _c_int00(void);
 extern void Timer0IntHandler(void);
@@ -52,6 +50,8 @@ extern void UART3IntHandler(void);
 #ifdef DEBUG_ACTIVE
     extern void UART0IntHandler(void);
 #endif
+extern void ADC0SS1IntHandler(void);
+extern void ADC1SS1IntHandler(void);
 
 //*****************************************************************************
 //
@@ -113,7 +113,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // PWM Generator 2
     IntDefaultHandler,                      // Quadrature Encoder 0
     IntDefaultHandler,                      // ADC Sequence 0
-    IntDefaultHandler,                      // ADC Sequence 1
+    ADC0SS1IntHandler,                      // ADC Sequence 1
     IntDefaultHandler,                      // ADC Sequence 2
     IntDefaultHandler,                      // ADC Sequence 3
     IntDefaultHandler,                      // Watchdog timer
@@ -145,7 +145,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // uDMA Software Transfer
     IntDefaultHandler,                      // uDMA Error
     IntDefaultHandler,                      // ADC1 Sequence 0
-    IntDefaultHandler,                      // ADC1 Sequence 1
+    ADC1SS1IntHandler,                      // ADC1 Sequence 1
     IntDefaultHandler,                      // ADC1 Sequence 2
     IntDefaultHandler,                      // ADC1 Sequence 3
     IntDefaultHandler,                      // External Bus Interface 0
