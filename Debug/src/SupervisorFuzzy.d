@@ -21,6 +21,7 @@ src/SupervisorFuzzy.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/
 src/SupervisorFuzzy.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h
 src/SupervisorFuzzy.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/uart.h
 src/SupervisorFuzzy.obj: ../src/StateMachineGeneric.h
+src/SupervisorFuzzy.obj: ../src/LinkedList.h
 
 ../src/SupervisorFuzzy.c: 
 ../src/SupervisorFuzzy.h: 
@@ -43,3 +44,4 @@ C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/stdbool.h:
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h: 
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/uart.h: 
 ../src/StateMachineGeneric.h: 
+../src/LinkedList.h: 

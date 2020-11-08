@@ -23,6 +23,7 @@ src/StateMachineSupervisores.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.
 src/StateMachineSupervisores.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/_defs.h
 src/StateMachineSupervisores.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/machine/_limits.h
 src/StateMachineSupervisores.obj: ../src/SupervisorFuzzy.h
+src/StateMachineSupervisores.obj: ../src/LinkedList.h
 
 ../src/StateMachineSupervisores.c: 
 ../src/StateMachineSupervisores.h: 
@@ -47,3 +48,4 @@ C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/linkage.h:
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/_defs.h: 
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/machine/_limits.h: 
 ../src/SupervisorFuzzy.h: 
+../src/LinkedList.h: 

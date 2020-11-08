@@ -239,7 +239,7 @@ void Init_SM_Controlador_Hibrido(t_sm_ControladorHibrido *sm, JDInputOutput *dat
     sm->controlador[ST_AO_AND_GTG] = (t_action_Supervisor)fn_controladorAO_AND_GTG;
     sm->controlador[ST_FOLLOW_WALL] = (t_action_Supervisor)fn_controladorFOLLOW_WALL;
 
-
+    /*
     int i;
     for(i=1; i < 5; i++) {
         //sm->controlador[i] = (t_action_Supervisor)fn_controladorGTG;
@@ -248,7 +248,7 @@ void Init_SM_Controlador_Hibrido(t_sm_ControladorHibrido *sm, JDInputOutput *dat
         sm->controlador[i] = (t_action_Supervisor)fn_controladorFOLLOW_WALL;
         sm->fw_direction = SLIDING_LEFT;
     }
-
+    */
 }
 
 // FUNÇÃO PARA EXECUTAR TRANSIÇÃO

@@ -6,6 +6,7 @@ SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../src/LinkedList.c \
 ../src/StateMachineComm.c \
 ../src/StateMachineSupervisores.c \
 ../src/SupervisorFuzzy.c \
@@ -13,6 +14,7 @@ C_SRCS += \
 ../src/main.c 
 
 C_DEPS += \
+./src/LinkedList.d \
 ./src/StateMachineComm.d \
 ./src/StateMachineSupervisores.d \
 ./src/SupervisorFuzzy.d \
@@ -20,6 +22,7 @@ C_DEPS += \
 ./src/main.d 
 
 OBJS += \
+./src/LinkedList.obj \
 ./src/StateMachineComm.obj \
 ./src/StateMachineSupervisores.obj \
 ./src/SupervisorFuzzy.obj \
@@ -27,6 +30,7 @@ OBJS += \
 ./src/main.obj 
 
 OBJS__QUOTED += \
+"src\LinkedList.obj" \
 "src\StateMachineComm.obj" \
 "src\StateMachineSupervisores.obj" \
 "src\SupervisorFuzzy.obj" \
@@ -34,6 +38,7 @@ OBJS__QUOTED += \
 "src\main.obj" 
 
 C_DEPS__QUOTED += \
+"src\LinkedList.d" \
 "src\StateMachineComm.d" \
 "src\StateMachineSupervisores.d" \
 "src\SupervisorFuzzy.d" \
@@ -41,6 +46,7 @@ C_DEPS__QUOTED += \
 "src\main.d" 
 
 C_SRCS__QUOTED += \
+"../src/LinkedList.c" \
 "../src/StateMachineComm.c" \
 "../src/StateMachineSupervisores.c" \
 "../src/SupervisorFuzzy.c" \

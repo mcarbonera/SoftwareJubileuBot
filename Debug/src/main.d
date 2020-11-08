@@ -35,6 +35,7 @@ src/main.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/pin_map.h
 src/main.obj: ../src/StateMachineSupervisores.h
 src/main.obj: ../src/SupervisorHibrido.h
 src/main.obj: ../src/SupervisorFuzzy.h
+src/main.obj: ../src/LinkedList.h
 
 ../src/main.c: 
 ../src/main.h: 
@@ -71,3 +72,4 @@ C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/pin_map.h:
 ../src/StateMachineSupervisores.h: 
 ../src/SupervisorHibrido.h: 
 ../src/SupervisorFuzzy.h: 
+../src/LinkedList.h: 

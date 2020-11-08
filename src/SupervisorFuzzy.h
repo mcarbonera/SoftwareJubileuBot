@@ -9,6 +9,7 @@
 #include "main.h"
 #include "StateMachineGeneric.h"
 #include "StateMachineComm.h"
+#include "LinkedList.h"
 
 #define D_STOP 0.15
 #define D_PROG_EPSILON 0.02
@@ -118,6 +119,8 @@ typedef struct _fuzzy_EO_type {
 
     double recSensorVetInfSoma[5];
     double recVelInfSoma;
+
+    LinkedList eoFisOut[11];
 } EO_FIS;
 
 typedef struct _fuzzy_SP_type {
@@ -129,6 +132,8 @@ typedef struct _fuzzy_SP_type {
 
     double recSPSoma[2];
     double recDistSoma[2];
+
+    LinkedList spFisOut[4];
 } SP_FIS;
 
 typedef struct _fuzzy_SV_type {
@@ -140,6 +145,8 @@ typedef struct _fuzzy_SV_type {
 
     double recW[2];
     double recSomaW;
+
+    LinkedList svFisOut[2];
 } SV_FIS;
 
 typedef struct _sm_contr_Fuzzy{
@@ -157,8 +164,6 @@ typedef struct _sm_contr_Fuzzy{
     int SP_Dir;
     // Ativação IPO/SP
     float ativacaoSP;
-    //Passos
-    int ativacaoPassos;
     // Para verificar se houve progresso:
     float d_prog;
     double IPO_Vet[2];
@@ -168,7 +173,6 @@ typedef struct _sm_contr_Fuzzy{
 
     /* Parâmetros reutilizáveis */
     double distanciaObjetivo;
-
 } t_sm_ControladorFuzzy;
 
 void Init_SM_Controlador_Fuzzy(t_sm_ControladorFuzzy *sm, JDInputOutput *data);

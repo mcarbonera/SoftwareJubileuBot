@@ -65,7 +65,6 @@ void Init_SM_Controlador_Fuzzy(t_sm_ControladorFuzzy *sm, JDInputOutput *data)
 
     sm->SP_Dir = 0;
     sm->ativacaoSP = 0;
-    sm->ativacaoPassos = 40;
     sm->d_prog = 100;
 
     sm->spFis.grauDeInferenciaEO = &sm->eoFis.grauDeInferenciaEO;
@@ -243,7 +242,7 @@ void verificaAtivacaoSP(t_sm_ControladorFuzzy *sm) {
             sm->SP_Dir = 0;
         }
     } else {
-        if(sm->ativacaoSP < sm->ativacaoPassos) {
+        if(sm->ativacaoSP < ATIVACAO_PASSOS) {
             sm->ativacaoSP++;
         }
     }
@@ -301,7 +300,11 @@ void fuzzyficacaoEOSP(t_sm_ControladorFuzzy *sm) {
     int i;
 
     sm->eoFis.recVel = 0;
+    sm->eoFis.recVelInfSoma = 0;
+    initLinkedList(&sm->eoFis.eoFisOut[10]);
     for(i=0; i<5; i++) {
+        initLinkedList(&sm->eoFis.eoFisOut[2*i]);
+        initLinkedList(&sm->eoFis.eoFisOut[2*i + 1]);
         sm->eoFis.ativacaoSensor[i] = 0x00;
         sm->eoFis.recSensorVet[i][0] = 0;
         sm->eoFis.recSensorVet[i][1] = 0;
@@ -347,157 +350,135 @@ void fuzzyficacaoEOSP(t_sm_ControladorFuzzy *sm) {
 }
 
 void aplicaRegrasEDefuzzificacaoEO(t_sm_ControladorFuzzy *sm) {
-    double area;
+    double grau;
     int i;
 
     if(sm->eoFis.ativacaoSensor[0] & DIST_P_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[0][DIST_P]);
-        sm->eoFis.recSensorVet[0][1] += area*VET_NG_X;
-        sm->eoFis.recSensorVetInfSoma[0] += area;
+        grau = sm->eoFis.grauDeInferenciaEO[0][DIST_P];
+        addElementOrdered(&sm->eoFis.eoFisOut[0],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[1],VET_B,VET_NG_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[0] & DIST_M_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[0][DIST_M]);
-        sm->eoFis.recSensorVet[0][1] += area*VET_NM_X;
-        sm->eoFis.recSensorVetInfSoma[0] += area;
+        grau = sm->eoFis.grauDeInferenciaEO[0][DIST_M];
+        addElementOrdered(&sm->eoFis.eoFisOut[0],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[1],VET_B,VET_NM_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[0] & DIST_G_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[0][DIST_G]);
-        sm->eoFis.recSensorVet[0][1] += area*VET_NP_X;
-        sm->eoFis.recSensorVetInfSoma[0] += area;
+        grau = sm->eoFis.grauDeInferenciaEO[0][DIST_G];
+        addElementOrdered(&sm->eoFis.eoFisOut[0],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[1],VET_B,VET_NP_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[0] & DIST_SAT_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[0][DIST_SAT]);
-        sm->eoFis.recSensorVetInfSoma[0] += area;
-
-        sm->eoFis.recVel += area*VEL_G_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[0][DIST_SAT];
+        addElementOrdered(&sm->eoFis.eoFisOut[0],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[1],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_G_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[1] & DIST_P_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[1][DIST_P]);
-        sm->eoFis.recSensorVet[1][1] += area*VET_NG_X;
-        sm->eoFis.recSensorVetInfSoma[1] += area;
-
-        sm->eoFis.recVel += area*VEL_P_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[1][DIST_P];
+        addElementOrdered(&sm->eoFis.eoFisOut[2],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[3],VET_B,VET_NG_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_P_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[1] & DIST_M_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[1][DIST_M]);
-        sm->eoFis.recSensorVet[1][1] += area*VET_NM_X;
-        sm->eoFis.recSensorVetInfSoma[1] += area;
-
-        sm->eoFis.recVel += area*VEL_M_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[1][DIST_M];
+        addElementOrdered(&sm->eoFis.eoFisOut[2],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[3],VET_B,VET_NM_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_M_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[1] & DIST_G_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[1][DIST_G]);
-        sm->eoFis.recSensorVet[1][1] += area*VET_NP_X;
-        sm->eoFis.recSensorVetInfSoma[1] += area;
-
-        sm->eoFis.recVel += area*VEL_M_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[1][DIST_G];
+        addElementOrdered(&sm->eoFis.eoFisOut[2],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[3],VET_B,VET_NP_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_M_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[1] & DIST_SAT_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[1][DIST_SAT]);
-        sm->eoFis.recSensorVetInfSoma[1] += area;
-
-        sm->eoFis.recVel += area*VEL_G_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[1][DIST_SAT];
+        addElementOrdered(&sm->eoFis.eoFisOut[2],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[3],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_G_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[2] & DIST_P_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[2][DIST_P]);
-        sm->eoFis.recSensorVet[2][0] += area*VET_NG_X;
-        sm->eoFis.recSensorVetInfSoma[2] += area;
-
-        sm->eoFis.recVel += area*VEL_P_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[2][DIST_P];
+        addElementOrdered(&sm->eoFis.eoFisOut[4],VET_B,VET_NG_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[5],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_P_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[2] & DIST_M_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[2][DIST_M]);
-        sm->eoFis.recSensorVet[2][0] += area*VET_NM_X;
-        sm->eoFis.recSensorVetInfSoma[2] += area;
-
-        sm->eoFis.recVel += area*VEL_M_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[2][DIST_M];
+        addElementOrdered(&sm->eoFis.eoFisOut[4],VET_B,VET_NM_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[5],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_M_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[2] & DIST_G_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[2][DIST_G]);
-        sm->eoFis.recSensorVet[2][0] += area*VET_NP_X;
-        sm->eoFis.recSensorVetInfSoma[2] += area;
-
-        sm->eoFis.recVel += area*VEL_M_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[2][DIST_G];
+        addElementOrdered(&sm->eoFis.eoFisOut[4],VET_B,VET_NP_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[5],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_M_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[2] & DIST_SAT_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[2][DIST_SAT]);
-        sm->eoFis.recSensorVetInfSoma[2] += area;
-
-        sm->eoFis.recVel += area*VEL_G_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[2][DIST_SAT];
+        addElementOrdered(&sm->eoFis.eoFisOut[4],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[5],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_G_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[3] & DIST_P_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[3][DIST_P]);
-        sm->eoFis.recSensorVet[3][1] += area*VET_PG_X;
-        sm->eoFis.recSensorVetInfSoma[3] += area;
-
-        sm->eoFis.recVel += area*VEL_P_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[3][DIST_P];
+        addElementOrdered(&sm->eoFis.eoFisOut[6],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[7],VET_B,VET_PG_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_P_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[3] & DIST_M_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[3][DIST_M]);
-        sm->eoFis.recSensorVet[3][1] += area*VET_PM_X;
-        sm->eoFis.recSensorVetInfSoma[3] += area;
-
-        sm->eoFis.recVel += area*VEL_M_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[3][DIST_M];
+        addElementOrdered(&sm->eoFis.eoFisOut[6],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[7],VET_B,VET_PM_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_M_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[3] & DIST_G_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[3][DIST_G]);
-        sm->eoFis.recSensorVet[3][1] += area*VET_PP_X;
-        sm->eoFis.recSensorVetInfSoma[3] += area;
-
-        sm->eoFis.recVel += area*VEL_M_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[3][DIST_G];
+        addElementOrdered(&sm->eoFis.eoFisOut[6],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[7],VET_B,VET_PP_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_M_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[3] & DIST_SAT_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[3][DIST_SAT]);
-        sm->eoFis.recSensorVetInfSoma[3] += area;
-
-        sm->eoFis.recVel += area*VEL_G_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[3][DIST_SAT];
+        addElementOrdered(&sm->eoFis.eoFisOut[6],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[7],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_G_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[4] & DIST_P_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[4][DIST_P]);
-        sm->eoFis.recSensorVet[4][1] += area*VET_PG_X;
-        sm->eoFis.recSensorVetInfSoma[4] += area;
+        grau = sm->eoFis.grauDeInferenciaEO[4][DIST_P];
+        addElementOrdered(&sm->eoFis.eoFisOut[8],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[9],VET_B,VET_PG_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[4] & DIST_M_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[4][DIST_M]);
-        sm->eoFis.recSensorVet[4][1] += area*VET_PM_X;
-        sm->eoFis.recSensorVetInfSoma[4] += area;
+        grau = sm->eoFis.grauDeInferenciaEO[4][DIST_M];
+        addElementOrdered(&sm->eoFis.eoFisOut[8],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[9],VET_B,VET_PM_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[4] & DIST_G_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[4][DIST_G]);
-        sm->eoFis.recSensorVet[4][1] += area*VET_PP_X;
-        sm->eoFis.recSensorVetInfSoma[4] += area;
+        grau = sm->eoFis.grauDeInferenciaEO[4][DIST_G];
+        addElementOrdered(&sm->eoFis.eoFisOut[8],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[9],VET_B,VET_PP_X, grau);
     }
     if(sm->eoFis.ativacaoSensor[4] & DIST_SAT_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,sm->eoFis.grauDeInferenciaEO[4][DIST_SAT]);
-        sm->eoFis.recSensorVetInfSoma[4] += area;
-
-        sm->eoFis.recVel += area*VEL_G_X;
-        sm->eoFis.recVelInfSoma += area;
+        grau = sm->eoFis.grauDeInferenciaEO[4][DIST_SAT];
+        addElementOrdered(&sm->eoFis.eoFisOut[8],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[9],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->eoFis.eoFisOut[10],VET_B,VEL_G_X, grau);
     }
 
-    sm->eoFis.recVel /= sm->eoFis.recVelInfSoma;
+    sm->eoFis.recVel = deffuzify(&sm->eoFis.eoFisOut[10]);
     for(i=0; i<5; i++) {
-        sm->eoFis.recSensorVet[i][0] /= sm->eoFis.recSensorVetInfSoma[i];
-        sm->eoFis.recSensorVet[i][1] /= sm->eoFis.recSensorVetInfSoma[i];
+        sm->eoFis.recSensorVet[i][0] = deffuzify(&sm->eoFis.eoFisOut[2*i]);
+        sm->eoFis.recSensorVet[i][1] = deffuzify(&sm->eoFis.eoFisOut[2*i + 1]);
     }
 }
 
 void fuzzificacaoSP(t_sm_ControladorFuzzy *sm) {
     /* não estão calculados os inputs ~dist_sat */
     int i;
+
     for(i=0; i<5; i++) {
         if(sm->jubileuInputOutput->DistanciaSensor[i] > (DIST_SAT_X - DIST_SAT_B2) && sm->jubileuInputOutput->DistanciaSensor[i] < (DIST_SAT_X + DIST_SAT_B2)) {
             *sm->spFis.grauDeInferenciaEO[i][DIST_SAT] = sm->jubileuInputOutput->DistanciaSensor[i] - DIST_SAT_X;
@@ -512,7 +493,7 @@ void fuzzificacaoSP(t_sm_ControladorFuzzy *sm) {
 }
 
 void aplicaRegrasEDefuzzificacaoSP(t_sm_ControladorFuzzy *sm) {
-    double area, grau;
+    double grau;
     int i;
 
     for(i=0; i<2; i++) {
@@ -520,132 +501,114 @@ void aplicaRegrasEDefuzzificacaoSP(t_sm_ControladorFuzzy *sm) {
         sm->spFis.recDistSoma[i] = 0;
         sm->spFis.recSPVet[i] = 0;
         sm->spFis.recSPSoma[i] = 0;
+
+        initLinkedList(&sm->spFis.spFisOut[i]);
+        initLinkedList(&sm->spFis.spFisOut[i+2]);
     }
 
     if((sm->spFis.ativacaoSensor[0] & DIST_SAT_BIT) && (sm->spFis.ativacaoSensor[4] & DIST_SAT_BIT) &&
             (sm->spFis.ativacaoSensor[1] & DIST_SAT_BIT) && (sm->spFis.ativacaoSensor[3] & DIST_SAT_BIT)) {
-        grau = fmin(*sm->spFis.grauDeInferenciaEO[0][DIST_SAT], *sm->spFis.grauDeInferenciaEO[1][DIST_SAT]);
-        grau = fmin(grau, *sm->spFis.grauDeInferenciaEO[3][DIST_SAT]);
-        grau = fmin(grau, *sm->spFis.grauDeInferenciaEO[4][DIST_SAT]);
-        area = calculaAreaTrianguloCortado(VET_B,grau);
-        sm->spFis.recSPSoma[0] += area;
-        sm->spFis.recSPSoma[1] += area;
+        grau = fmin((*sm->spFis.grauDeInferenciaEO)[0][DIST_SAT], (*sm->spFis.grauDeInferenciaEO)[1][DIST_SAT]);
+        grau = fmin(grau, (*sm->spFis.grauDeInferenciaEO)[3][DIST_SAT]);
+        grau = fmin(grau, (*sm->spFis.grauDeInferenciaEO)[4][DIST_SAT]);
+        addElementOrdered(&sm->spFis.spFisOut[0],VET_B,VET_Z_X, grau);
+        addElementOrdered(&sm->spFis.spFisOut[1],VET_B,VET_Z_X, grau);
     }
     if((sm->spFis.ativacaoSensor[0] & ~DIST_SAT_BIT) || (sm->spFis.ativacaoSensor[4] & ~DIST_SAT_BIT) ||
             (sm->spFis.ativacaoSensor[1] & ~DIST_SAT_BIT) || (sm->spFis.ativacaoSensor[3] & ~DIST_SAT_BIT)) {
-        grau = fmax(calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[0][DIST_SAT]), calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[1][DIST_SAT]));
-        grau = fmax(grau, calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[3][DIST_SAT]));
-        grau = fmax(grau, calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[4][DIST_SAT]));
-        area = calculaAreaTrianguloCortado(VET_B,grau);
-        sm->spFis.recSPVet[0] += area*VET_PP_X;
-        sm->spFis.recSPSoma[0] += area;
+        grau = fmax(calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[0][DIST_SAT]), calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[1][DIST_SAT]));
+        grau = fmax(grau, calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[3][DIST_SAT]));
+        grau = fmax(grau, calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[4][DIST_SAT]));
+        addElementOrdered(&sm->spFis.spFisOut[0],VET_B,VET_PP_X, grau);
     }
     if((sm->spFis.ativacaoSensor[0] & ~DIST_SAT_BIT) && (sm->spFis.ativacaoSensor[1] & DIST_SAT_BIT)) {
-        grau = fmin(calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[0][DIST_SAT]), *sm->spFis.grauDeInferenciaEO[1][DIST_SAT]);
-        area = calculaAreaTrianguloCortado(VET_B,grau);
-        sm->spFis.recSPVet[1] += area*VET_PP_X;
-        sm->spFis.recSPSoma[1] += area;
-        sm->spFis.recDistSoma[0] += area;
+        grau = fmin(calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[0][DIST_SAT]), (*sm->spFis.grauDeInferenciaEO)[1][DIST_SAT]);
+        addElementOrdered(&sm->spFis.spFisOut[1],VET_B,VET_PP_X, grau);
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_Z_X, grau);
     }
     if((sm->spFis.ativacaoSensor[4] & ~DIST_SAT_BIT) && (sm->spFis.ativacaoSensor[3] & DIST_SAT_BIT)) {
-        grau = fmin(calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[4][DIST_SAT]), *sm->spFis.grauDeInferenciaEO[3][DIST_SAT]);
-        area = calculaAreaTrianguloCortado(VET_B,grau);
-        sm->spFis.recSPVet[1] += area*VET_NP_X;
-        sm->spFis.recSPSoma[1] += area;
-        sm->spFis.recDistSoma[0] += area;
+        grau = fmin(calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[4][DIST_SAT]), (*sm->spFis.grauDeInferenciaEO)[3][DIST_SAT]);
+        addElementOrdered(&sm->spFis.spFisOut[1],VET_B,VET_NP_X, grau);
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_Z_X, grau);
     }
     if((sm->spFis.ativacaoSensor[0] & ~DIST_SAT_BIT) && (sm->spFis.ativacaoSensor[2] & ~DIST_SAT_BIT)) {
-        grau = fmin(calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[0][DIST_SAT]), calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[2][DIST_SAT]));
-        area = calculaAreaTrianguloCortado(VET_B,grau);
-        sm->spFis.recSPVet[1] += area*VET_NP_X;
-        sm->spFis.recSPSoma[1] += area;
-        sm->spFis.recDistSoma[0] += area;
+        grau = fmin(calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[0][DIST_SAT]), calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[2][DIST_SAT]));
+        addElementOrdered(&sm->spFis.spFisOut[1],VET_B,VET_NP_X, grau);
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_Z_X, grau);
     }
     if((sm->spFis.ativacaoSensor[4] & ~DIST_SAT_BIT) && (sm->spFis.ativacaoSensor[2] & ~DIST_SAT_BIT)) {
-        grau = fmin(calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[4][DIST_SAT]), calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[2][DIST_SAT]));
-        area = calculaAreaTrianguloCortado(VET_B,grau);
-        sm->spFis.recSPVet[1] += area*VET_PP_X;
-        sm->spFis.recSPSoma[1] += area;
-        sm->spFis.recDistSoma[0] += area;
+        grau = fmin(calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[4][DIST_SAT]), calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[2][DIST_SAT]));
+        addElementOrdered(&sm->spFis.spFisOut[1],VET_B,VET_PP_X, grau);
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_Z_X, grau);
     }
     if(sm->spFis.ativacaoSensor[0] & DIST_P_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[0][DIST_P]);
-        sm->spFis.recDistSoma[0] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[0][DIST_P];
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_Z_X, grau);
     }
     if(sm->spFis.ativacaoSensor[0] & DIST_M_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[0][DIST_M]);
-        sm->spFis.recDistVet[0] += area*VET_PP_X;
-        sm->spFis.recDistSoma[0] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[0][DIST_M];
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_PP_X, grau);
     }
     if(sm->spFis.ativacaoSensor[0] & DIST_G_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[0][DIST_G]);
-        sm->spFis.recDistVet[0] += area*VET_PP_X;
-        sm->spFis.recDistSoma[0] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[0][DIST_G];
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_PP_X, grau);
     }
     if(sm->spFis.ativacaoSensor[4] & DIST_P_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[4][DIST_P]);
-        sm->spFis.recDistSoma[0] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[4][DIST_P];
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_Z_X, grau);
     }
     if(sm->spFis.ativacaoSensor[4] & DIST_M_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[4][DIST_M]);
-        sm->spFis.recDistVet[0] += area*VET_NP_X;
-        sm->spFis.recDistSoma[0] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[4][DIST_M];
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_NP_X, grau);
     }
     if(sm->spFis.ativacaoSensor[4] & DIST_G_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[4][DIST_G]);
-        sm->spFis.recDistVet[0] += area*VET_NP_X;
-        sm->spFis.recDistSoma[0] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[4][DIST_G];
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_NP_X, grau);
     }
     if(sm->spFis.ativacaoSensor[1] & DIST_P_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[1][DIST_P]);
-        sm->spFis.recDistSoma[1] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[1][DIST_P];
+        addElementOrdered(&sm->spFis.spFisOut[3],VET_B,VET_Z_X, grau);
     }
     if(sm->spFis.ativacaoSensor[1] & DIST_M_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[1][DIST_M]);
-        sm->spFis.recDistVet[1] += area*VET_PP_X;
-        sm->spFis.recDistSoma[1] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[1][DIST_M];
+        addElementOrdered(&sm->spFis.spFisOut[3],VET_B,VET_PP_X, grau);
     }
     if(sm->spFis.ativacaoSensor[1] & DIST_G_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[1][DIST_G]);
-        sm->spFis.recDistVet[1] += area*VET_PP_X;
-        sm->spFis.recDistSoma[1] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[1][DIST_G];
+        addElementOrdered(&sm->spFis.spFisOut[3],VET_B,VET_PP_X, grau);
     }
     if(sm->spFis.ativacaoSensor[3] & DIST_P_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[3][DIST_P]);
-        sm->spFis.recDistSoma[1] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[3][DIST_P];
+        addElementOrdered(&sm->spFis.spFisOut[3],VET_B,VET_Z_X, grau);
     }
     if(sm->spFis.ativacaoSensor[3] & DIST_M_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[3][DIST_M]);
-        sm->spFis.recDistVet[1] += area*VET_NP_X;
-        sm->spFis.recDistSoma[1] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[3][DIST_M];
+        addElementOrdered(&sm->spFis.spFisOut[3],VET_B,VET_NP_X, grau);
     }
     if(sm->spFis.ativacaoSensor[3] & DIST_G_BIT) {
-        area = calculaAreaTrianguloCortado(VET_B,*sm->spFis.grauDeInferenciaEO[3][DIST_G]);
-        sm->spFis.recDistVet[1] += area*VET_NP_X;
-        sm->spFis.recDistSoma[1] += area;
+        grau = (*sm->spFis.grauDeInferenciaEO)[3][DIST_G];
+        addElementOrdered(&sm->spFis.spFisOut[3],VET_B,VET_NP_X, grau);
     }
     if((sm->spFis.ativacaoSensor[0] & ~DIST_SAT_BIT) && (sm->spFis.ativacaoSensor[1] & ~DIST_SAT_BIT) &&
             (sm->spFis.ativacaoSensor[2] & ~DIST_SAT_BIT)) {
-        grau = fmin(calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[0][DIST_SAT]), calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[1][DIST_SAT]));
-        grau = fmin(grau, calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[2][DIST_SAT]));
-        area = calculaAreaTrianguloCortado(VET_B,grau);
-        sm->spFis.recSPVet[1] += area*VET_NP_X;
-        sm->spFis.recSPSoma[1] += area;
-        sm->spFis.recDistSoma[0] += area;
+        grau = fmin(calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[0][DIST_SAT]), calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[1][DIST_SAT]));
+        grau = fmin(grau, calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[2][DIST_SAT]));
+
+        addElementOrdered(&sm->spFis.spFisOut[1],VET_B,VET_NP_X, grau);
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_Z_X, grau);
     }
     if((sm->spFis.ativacaoSensor[4] & ~DIST_SAT_BIT) && (sm->spFis.ativacaoSensor[3] & ~DIST_SAT_BIT) &&
             (sm->spFis.ativacaoSensor[2] & ~DIST_SAT_BIT)) {
-        grau = fmin(calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[4][DIST_SAT]), calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[3][DIST_SAT]));
-        grau = fmin(grau, calculaFuzzyNot(*sm->spFis.grauDeInferenciaEO[2][DIST_SAT]));
-        area = calculaAreaTrianguloCortado(VET_B,grau);
-        sm->spFis.recSPVet[1] += area*VET_PP_X;
-        sm->spFis.recSPSoma[1] += area;
-        sm->spFis.recDistSoma[0] += area;
+        grau = fmin(calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[4][DIST_SAT]), calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[3][DIST_SAT]));
+        grau = fmin(grau, calculaFuzzyNot((*sm->spFis.grauDeInferenciaEO)[2][DIST_SAT]));
+
+        addElementOrdered(&sm->spFis.spFisOut[1],VET_B,VET_PP_X, grau);
+        addElementOrdered(&sm->spFis.spFisOut[2],VET_B,VET_Z_X, grau);
     }
 
     for(i=0; i<2; i++) {
-        sm->spFis.recDistVet[i] /= sm->spFis.recDistSoma[i];
-        sm->spFis.recSPVet[i] /= sm->spFis.recSPSoma[i];
+        sm->spFis.recSPVet[i] = deffuzify(&sm->spFis.spFisOut[i]);
+        sm->spFis.recDistVet[i] = deffuzify(&sm->spFis.spFisOut[i+2]);
     }
 }
 
@@ -654,8 +617,8 @@ void fuzzificacaoSeguirVetor(t_sm_ControladorFuzzy *sm) {
 
     sm->svFis.ativacaoV = 0x00;
     sm->svFis.recSomaW = 0;
-
     for(i=0; i<2; i++) {
+        initLinkedList(&sm->svFis.svFisOut[i]);
         sm->svFis.ativacaoW[i] = 0x00;
         sm->svFis.recW[i] = 0;
     }
@@ -769,7 +732,7 @@ void aplicaRegrasEDefuzzificacaoSeguirVetor(t_sm_ControladorFuzzy *sm) {
     int ativoV[2];
     int ativoW[2][3];
     int saidaWlWr[2];
-    double grau, area;
+    double grau;
 
     idxV = 0;
     if(sm->svFis.ativacaoV & SV_VEL_VP_BIT) {
@@ -818,36 +781,34 @@ void aplicaRegrasEDefuzzificacaoSeguirVetor(t_sm_ControladorFuzzy *sm) {
             for(k=0; k<idxW[1]; k++) {
                 calculaRegraFuzzySV(saidaWlWr,ativoV[i],ativoW[0][j],ativoW[1][k]);
                 grau = calculaGrauPertinenciaSV(sm,ativoV[i],ativoW[0][j],ativoW[1][k]);
-                area = calculaAreaTrianguloCortado(SV_VET_B, grau);
-                sm->svFis.recSomaW += area;
                 for(popIdx=0; popIdx<2; popIdx++) {
                     switch(saidaWlWr[popIdx]) {
                         case -4:
-                            sm->svFis.recW[popIdx] += area*SV_VET_NGSAT_X;
+                            addElementOrdered(&sm->svFis.svFisOut[popIdx],SV_VET_B,SV_VET_NGSAT_X, grau);
                             break;
                         case -3:
-                            sm->svFis.recW[popIdx] += area*SV_VET_NG_X;
+                            addElementOrdered(&sm->svFis.svFisOut[popIdx],SV_VET_B,SV_VET_NG_X, grau);
                             break;
                         case -2:
-                            sm->svFis.recW[popIdx] += area*SV_VET_NM_X;
+                            addElementOrdered(&sm->svFis.svFisOut[popIdx],SV_VET_B,SV_VET_NM_X, grau);
                             break;
                         case -1:
-                            sm->svFis.recW[popIdx] += area*SV_VET_NP_X;
+                            addElementOrdered(&sm->svFis.svFisOut[popIdx],SV_VET_B,SV_VET_NP_X, grau);
                             break;
                         case 0:
-                            sm->svFis.recW[popIdx] += area*SV_VET_Z_X;
+                            addElementOrdered(&sm->svFis.svFisOut[popIdx],SV_VET_B,SV_VET_Z_X, grau);
                             break;
                         case 1:
-                            sm->svFis.recW[popIdx] += area*SV_VET_PP_X;
+                            addElementOrdered(&sm->svFis.svFisOut[popIdx],SV_VET_B,SV_VET_PP_X, grau);
                             break;
                         case 2:
-                            sm->svFis.recW[popIdx] += area*SV_VET_PM_X;
+                            addElementOrdered(&sm->svFis.svFisOut[popIdx],SV_VET_B,SV_VET_PM_X, grau);
                             break;
                         case 3:
-                            sm->svFis.recW[popIdx] += area*SV_VET_PG_X;
+                            addElementOrdered(&sm->svFis.svFisOut[popIdx],SV_VET_B,SV_VET_PG_X, grau);
                             break;
                         case 4:
-                            sm->svFis.recW[popIdx] += area*SV_VET_PGSAT_X;
+                            addElementOrdered(&sm->svFis.svFisOut[popIdx],SV_VET_B,SV_VET_PGSAT_X, grau);
                             break;
                     }
                 }
@@ -855,8 +816,8 @@ void aplicaRegrasEDefuzzificacaoSeguirVetor(t_sm_ControladorFuzzy *sm) {
         }
     }
 
-    sm->svFis.recW[0] /= sm->svFis.recSomaW;
-    sm->svFis.recW[1] /= sm->svFis.recSomaW;
+    sm->svFis.recW[0] = deffuzify(&sm->svFis.svFisOut[0]);
+    sm->svFis.recW[1] = deffuzify(&sm->svFis.svFisOut[1]);
 }
 
 void calculaRegraFuzzySV(int saidaWlWr[2], int valorV, int valorW0, int valorW1) {
@@ -864,7 +825,7 @@ void calculaRegraFuzzySV(int saidaWlWr[2], int valorV, int valorW0, int valorW1)
     int sinal = 1;
     int absoluto = valorW1;
 
-    if(absoluto == -1) {
+    if(absoluto < 0) {
         sinal = -1;
         absoluto *= -1;
     }
@@ -885,7 +846,7 @@ void calculaRegraFuzzySV(int saidaWlWr[2], int valorV, int valorW0, int valorW1)
                 ptoRec--;
             }
         }
-        if(absoluto == 1) {
+        else if(absoluto == 1) {
             if(valorW0 >= -3) {
                 ptoRec--;
             }
@@ -908,20 +869,22 @@ void calculaRegraFuzzySV(int saidaWlWr[2], int valorV, int valorW0, int valorW1)
         if(valorV > 2 && (valorW0 >= -1 && valorW0 <= 1) && (valorW1 >= -1 && valorW1 <= 1)) {
             ptoRecVel--;
         }
+    } else {
+        ptoRecVel = 0;
     }
 
     /* calcular rec Wl e Wr a partir de ptoRec */
-    saidaWlWr[0] = ptoRecVel + ptoRec;
-    saidaWlWr[1] = ptoRecVel + ptoRec * -1;
+    saidaWlWr[0] = ptoRecVel + ptoRec * -1;
+    saidaWlWr[1] = ptoRecVel + ptoRec;
     saidaWlWr[0] = evaluateMin(evaluateMax(saidaWlWr[0], -4), 4);
     saidaWlWr[1] = evaluateMin(evaluateMax(saidaWlWr[1], -4), 4);
 }
 
 double calculaGrauPertinenciaSV(t_sm_ControladorFuzzy *sm, int valorV, int valorW0, int valorW1) {
     double grau;
-    /* Calculo grau de pertinencia */
-    grau = fmin(sm->svFis.grauDeInferenciaV[valorV - 1], sm->svFis.grauDeInferenciaV[valorW0 + 4]);
-    grau = fmin(grau, sm->svFis.grauDeInferenciaV[valorW1 + 4]);
+    /* Calculo grau de pertinência */
+    grau = fmin(sm->svFis.grauDeInferenciaV[valorV - 1], sm->svFis.grauDeInferenciaW[0][valorW0 + 4]);
+    grau = fmin(grau, sm->svFis.grauDeInferenciaW[1][valorW1 + 4]);
     return grau;
 }
 
