@@ -4,7 +4,7 @@
 // FUNÇÕES DE TRANSICAO
 static void fn_STOP(t_sm_ControladorHibrido *sm) {
     if(!checkEventAtGoal(sm)) {
-        resetController(sm);
+        resetController(sm,1);
         sm->controladorAtual = ST_AO_AND_GTG;
     }
 }
@@ -15,16 +15,18 @@ static void fn_GTG(t_sm_ControladorHibrido *sm) {
     } else if(!checkEventProgressMade(sm)) {
         if(checkEventSlidingLeft(sm)) {
             sm->fw_direction = SLIDING_LEFT;
+            resetController(sm,0);
+            sm->controladorAtual = ST_FOLLOW_WALL;
         } else if(checkEventSlidingRight(sm)) {
             sm->fw_direction = SLIDING_RIGHT;
+            resetController(sm,0);
+            sm->controladorAtual = ST_FOLLOW_WALL;
         }
-        resetController(sm);
-        sm->controladorAtual = ST_FOLLOW_WALL;
     } else if(checkEventAtObstacle(sm)) {
-        resetController(sm);
+        resetController(sm,0);
         sm->controladorAtual = ST_AO_AND_GTG;
     } else if(checkEventUnsafe(sm)) {
-        resetController(sm);
+        resetController(sm,0);
         sm->controladorAtual = ST_AO;
     }
 }
@@ -33,7 +35,7 @@ static void fn_AO(t_sm_ControladorHibrido *sm) {
     if(checkEventAtGoal(sm)) {
         sm->controladorAtual = ST_STOP;
     } else if(!checkEventUnsafe(sm)) {
-        resetController(sm);
+        resetController(sm,0);
         sm->controladorAtual = ST_AO_AND_GTG;
     }
 }
@@ -44,16 +46,18 @@ static void fn_AO_AND_GTG(t_sm_ControladorHibrido *sm) {
     } else if(!checkEventProgressMade(sm)) {
         if(checkEventSlidingLeft(sm)) {
             sm->fw_direction = SLIDING_LEFT;
+            resetController(sm,0);
+            sm->controladorAtual = ST_FOLLOW_WALL;
         } else if(checkEventSlidingRight(sm)) {
             sm->fw_direction = SLIDING_RIGHT;
+            resetController(sm,0);
+            sm->controladorAtual = ST_FOLLOW_WALL;
         }
-        resetController(sm);
-        sm->controladorAtual = ST_FOLLOW_WALL;
     } else if(checkEventObstacleCleared(sm)) {
-        resetController(sm);
+        resetController(sm,0);
         sm->controladorAtual = ST_GTG;
     } else if(checkEventUnsafe(sm)) {
-        resetController(sm);
+        resetController(sm,0);
         sm->controladorAtual = ST_AO;
     }
 }
@@ -62,12 +66,11 @@ static void fn_FOLLOW_WALL(t_sm_ControladorHibrido *sm) {
     if(checkEventAtGoal(sm)) {
         sm->controladorAtual = ST_STOP;
     } else if(checkEventProgressMade(sm)) {
-        if(sm->fw_direction = SLIDING_LEFT && checkEventSlidingLeft(sm)) {
-            resetController(sm);
+        if(sm->fw_direction == SLIDING_LEFT && !checkEventSlidingLeft(sm)) {
+            resetController(sm,0);
             sm->controladorAtual = ST_AO_AND_GTG;
-        }
-        if(sm->fw_direction = SLIDING_RIGHT && checkEventSlidingRight(sm)) {
-            resetController(sm);
+        } else if(sm->fw_direction == SLIDING_RIGHT && !checkEventSlidingRight(sm)) {
+            resetController(sm,0);
             sm->controladorAtual = ST_AO_AND_GTG;
         }
     }
@@ -81,6 +84,8 @@ static void fn_controladorStop(t_sm_ControladorHibrido *sm) {
 
 static void fn_controladorGTG(t_sm_ControladorHibrido *sm) {
     double e_P;
+
+    sm->jubileuInputOutput->v = 1.0f;
 
     // Vetor GoToGoal:
     calculaVetorGoToGoal(sm);
@@ -105,27 +110,56 @@ static void fn_controladorGTG(t_sm_ControladorHibrido *sm) {
 }
 
 static void fn_controladorAO(t_sm_ControladorHibrido *sm) {
-    double e_P;
+    double e_P, tempX, tempY;
 
     sm->u_ao[0] = 0;
     sm->u_ao[1] = 0;
 
     // Verificar condição de colisão frontal.
     if(sm->jubileuInputOutput->DistanciaSensor[2] < D_UNSAFE) {
+        calculaVetorEvitarObstaculoParcial(sm);
         sm->jubileuInputOutput->v = 0;
         if((SENSOR_GANHO_1*(sm->jubileuInputOutput->DistanciaSensor[4]
                            -sm->jubileuInputOutput->DistanciaSensor[0])
            +SENSOR_GANHO_2*(sm->jubileuInputOutput->DistanciaSensor[3]
-                           -sm->jubileuInputOutput->DistanciaSensor[1])) > 0)
-        {
+                           -sm->jubileuInputOutput->DistanciaSensor[1])) > 0) {
             // Rotação 90 graus:
-            sm->u_ao[0] = -SENSOR_GANHO_3*sin(sm->jubileuInputOutput->CoordTheta)*100;
-            sm->u_ao[1] = SENSOR_GANHO_3*cos(sm->jubileuInputOutput->CoordTheta)*100;
+            //sm->u_ao[0] = -SENSOR_GANHO_3*sin(sm->jubileuInputOutput->CoordTheta)*100;
+            //sm->u_ao[1] = SENSOR_GANHO_3*cos(sm->jubileuInputOutput->CoordTheta)*100;
+
+            //tempX = sm->u_ao[1];
+            //tempY = -sm->u_ao[0];
+
+            tempX = cos(sm->jubileuInputOutput->CoordTheta)*sm->u_ao[1]
+                   -sin(sm->jubileuInputOutput->CoordTheta)*(-sm->u_ao[0]);
+            tempY = sin(sm->jubileuInputOutput->CoordTheta)*sm->u_ao[1]
+                   +cos(sm->jubileuInputOutput->CoordTheta)*(-sm->u_ao[0]);
         } else {
             // Rotação -90 graus:
-            sm->u_ao[0] = SENSOR_GANHO_3*sin(sm->jubileuInputOutput->CoordTheta)*100;
-            sm->u_ao[1] = -SENSOR_GANHO_3*cos(sm->jubileuInputOutput->CoordTheta)*100;
+            //sm->u_ao[0] = SENSOR_GANHO_3*sin(sm->jubileuInputOutput->CoordTheta)*100;
+            //sm->u_ao[1] = -SENSOR_GANHO_3*cos(sm->jubileuInputOutput->CoordTheta)*100;
+
+            //tempX = -sm->u_ao[1];
+            //tempY = sm->u_ao[0];
+
+            tempX = cos(sm->jubileuInputOutput->CoordTheta)*(-sm->u_ao[1])
+                   -sin(sm->jubileuInputOutput->CoordTheta)*sm->u_ao[0];
+            tempY = sin(sm->jubileuInputOutput->CoordTheta)*(-sm->u_ao[1])
+                   +cos(sm->jubileuInputOutput->CoordTheta)*sm->u_ao[0];
         }
+        /*
+        sm->u_ao[0] = tempX;
+        sm->u_ao[1] = tempY;
+
+        // World Frame:
+        tempX = cos(sm->jubileuInputOutput->CoordTheta)*sm->u_ao[0]
+               -sin(sm->jubileuInputOutput->CoordTheta)*sm->u_ao[1];
+        tempY = sin(sm->jubileuInputOutput->CoordTheta)*sm->u_ao[0]
+               +cos(sm->jubileuInputOutput->CoordTheta)*sm->u_ao[1];
+        */
+
+        sm->u_ao[0] = tempX;
+        sm->u_ao[1] = tempY;
     } else {
         calculaVetorAvoidObstacles(sm);
     }
@@ -153,6 +187,9 @@ static void fn_controladorAO(t_sm_ControladorHibrido *sm) {
 
 static void fn_controladorAO_AND_GTG(t_sm_ControladorHibrido *sm) {
     double e_P, u_gtg_n[2], u_ao_n[2];
+
+    // Diminuir Velocidade
+    sm->jubileuInputOutput->v = 0.3;
 
     // Vetor AvoidObstacles:
     calculaVetorAvoidObstacles(sm);
@@ -192,7 +229,28 @@ static void fn_controladorAO_AND_GTG(t_sm_ControladorHibrido *sm) {
 static void fn_controladorFOLLOW_WALL(t_sm_ControladorHibrido *sm) {
     double e_P;
 
+    // Testar direcao:
+    sm->fw_direction = SLIDING_LEFT;
+    sm->jubileuInputOutput->v = 0.2;
+
+    /* Saturar medidas acima de 60 cm para desconsiderar distancias "grandes". */
+    int i;
+    for(i=0; i<5; i++) {
+        if(sm->jubileuInputOutput->DistanciaSensor[i] > 60.0 &&
+                sm->jubileuInputOutput->DistanciaSensor[i] <= 80.0) {
+            sm->jubileuInputOutput->DistanciaSensor[i] = 60.0;
+        }
+    }
+
     verificaSeguirParedeEsquerdaDireita(sm);
+
+    /* Leds para mostrar sentido de contorno */
+    #include "driverlib/gpio.h"
+    if(sm->fw_direction == SLIDING_LEFT) {
+        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0|GPIO_PIN_1, 0xFF); // LEDs on
+    } else {
+        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0|GPIO_PIN_1, 0); // LEDs off
+    }
 
     // Controlador proporcional (apenas P):
     // Ângulo vetor u_fw;
@@ -221,6 +279,9 @@ void Init_SM_Controlador_Hibrido(t_sm_ControladorHibrido *sm, JDInputOutput *dat
     sm->ganhosSensores[4] = SENSOR_GANHO_5;
     sm->jubileuInputOutput = data;
     sm->d_prog = 1000;
+    sm->E_k = 0;
+    sm->e_k_1 = 0;
+    sm->fw_direction = SLIDING_LEFT;
 
     // Estado inicial:
     sm->controladorAtual = ST_STOP;
@@ -239,16 +300,14 @@ void Init_SM_Controlador_Hibrido(t_sm_ControladorHibrido *sm, JDInputOutput *dat
     sm->controlador[ST_AO_AND_GTG] = (t_action_Supervisor)fn_controladorAO_AND_GTG;
     sm->controlador[ST_FOLLOW_WALL] = (t_action_Supervisor)fn_controladorFOLLOW_WALL;
 
-    /*
     int i;
     for(i=1; i < 5; i++) {
         //sm->controlador[i] = (t_action_Supervisor)fn_controladorGTG;
         //sm->controlador[i] = (t_action_Supervisor)fn_controladorAO;
-        //sm->controlador[i] = (t_action_Supervisor)fn_controladorAO_AND_GTG;
-        sm->controlador[i] = (t_action_Supervisor)fn_controladorFOLLOW_WALL;
-        sm->fw_direction = SLIDING_LEFT;
+        sm->controlador[i] = (t_action_Supervisor)fn_controladorAO_AND_GTG;
+        //sm->controlador[i] = (t_action_Supervisor)fn_controladorFOLLOW_WALL;
+        //sm->fw_direction = SLIDING_RIGHT;
     }
-    */
 }
 
 // FUNÇÃO PARA EXECUTAR TRANSIÇÃO
@@ -313,13 +372,27 @@ uint8_t checkEventProgressMade(t_sm_ControladorHibrido *sm) {
     return 0;
 }
 
+/*
+void teste(t_sm_ControladorHibrido *sm) {
+    sm->jubileuInputOutput->DistanciaSensor[0] = 80.0;
+    sm->jubileuInputOutput->DistanciaSensor[1] = 79.0;
+    sm->jubileuInputOutput->DistanciaSensor[2] = 80.0;
+    sm->jubileuInputOutput->DistanciaSensor[3] = 80.0;
+    sm->jubileuInputOutput->DistanciaSensor[4] = 68.0;
+}
+*/
+
 uint8_t checkEventSlidingLeft(t_sm_ControladorHibrido *sm) {
     double sigma[2], detA;
+
+    //teste(sm);
 
     // Vetor GoToGoal
     calculaVetorGoToGoal(sm);
     // Vetor AvoidObstacle
     calculaVetorAvoidObstacles(sm);
+    sm->u_ao[0] /= 100;
+    sm->u_ao[1] /= 100;
 
     //Obstáculo presente? Calcula Vetor FollowWall
     if(sm->fw_direction == SLIDING_LEFT) {
@@ -358,10 +431,14 @@ uint8_t checkEventSlidingLeft(t_sm_ControladorHibrido *sm) {
 uint8_t checkEventSlidingRight(t_sm_ControladorHibrido *sm) {
     double sigma[2], detA;
 
+    //teste(sm);
+
     // Vetor GoToGoal
     calculaVetorGoToGoal(sm);
     // Vetor AvoidObstacle
     calculaVetorAvoidObstacles(sm);
+    sm->u_ao[0] /= 100;
+    sm->u_ao[1] /= 100;
 
     //Obstáculo presente? Calcula Vetor FollowWall
     if(sm->fw_direction == SLIDING_RIGHT) {
@@ -401,7 +478,7 @@ uint8_t checkEventSlidingRight(t_sm_ControladorHibrido *sm) {
 uint8_t checkEventObstacleCleared(t_sm_ControladorHibrido *sm) {
     int i;
     for(i=0; i<5; i++) {
-        if(sm->jubileuInputOutput->DistanciaSensor[i] < D_AT_OBS) {
+        if(sm->jubileuInputOutput->DistanciaSensor[i] <= D_AT_OBS) {
             return 0;
         }
     }
@@ -430,12 +507,14 @@ uint8_t checkEventUnsafe(t_sm_ControladorHibrido *sm) {
 }
 
 /* Funções utilitárias */
-void resetController(t_sm_ControladorHibrido *sm) {
+void resetController(t_sm_ControladorHibrido *sm, uint8_t resetDProg) {
     // Resetar erro acumulado (integrador) e erro anterior (diferencial)
     sm->E_k = 0;
     sm->e_k_1 = 0;
-    // d_prog
-    sm->d_prog = 1000;
+    // d_prog - só faz sentido mudar ao resetar o objetivo.
+    if(resetDProg) {
+        sm->d_prog = 1000;
+    }
 }
 
 double norm(double diffX, double diffY) {
@@ -453,22 +532,29 @@ void calculaParametrosReutilizaveis(t_sm_ControladorHibrido *sm) {
                                  sm->jubileuInputOutput->CoordY - sm->jubileuInputOutput->ObjY);
 }
 
-void encontraMenoresDistanciasSeguirParede(volatile double valores[3], int *idx_min, int *idx_min2) {
+/*
+ * Encontra menores distancias. Percorrendo do sensor lateral para o sensor frontal.
+ * valores eh um vetor, mas o ponteiro passado eh sempre o sensor lateral (direito ou esquerdo)
+ * sentidoDeCompraracao eh -1 ou 1, de modo que, se o ponteiro valores apontar para o sensor lateral esquerdo,
+ * os índices avaliados serão 0,1,2.
+ * Se o ponteiro valores apontar para o sensor lateral direito, os índices avaliados serão 4,3,2.
+ * */
+void encontraMenoresDistanciasSeguirParede(volatile double valores[], int sentidoComparacao, int *idx_min, int *idx_min2) {
     // Primeiro valor:
     *idx_min=0;
     // Segundo valor:
-    if(valores[1] < valores[*idx_min]) {
+    if(valores[sentidoComparacao] < valores[*idx_min]) {
         *idx_min2 = *idx_min;
-        *idx_min = 1;
+        *idx_min = sentidoComparacao*1;
     } else {
-        *idx_min2 = 1;
+        *idx_min2 = sentidoComparacao*1;
     }
     // Terceiro valor:
-    if(valores[2] < valores[*idx_min]) {
+    if(valores[sentidoComparacao*2] < valores[*idx_min]) {
         *idx_min2 = *idx_min;
-        *idx_min = 2;
-    } else if(valores[2] < valores[*idx_min2]) {
-        *idx_min2 = 2;
+        *idx_min = sentidoComparacao*2;
+    } else if(valores[sentidoComparacao*2] < valores[*idx_min2]) {
+        *idx_min2 = sentidoComparacao*2;
     }
 }
 
@@ -478,23 +564,9 @@ void calculaVetorGoToGoal(t_sm_ControladorHibrido *sm) {
 }
 
 void calculaVetorAvoidObstacles(t_sm_ControladorHibrido *sm) {
-    int i;
-    float anguloSensor;
-    double ir_distances_wf[2][5], tempX, tempY;
+    double tempX, tempY;
 
-    sm->u_ao[0] = 0;
-    sm->u_ao[1] = 0;
-    for(i=0, anguloSensor = M_PI_2; i<5; i++, anguloSensor-=M_PI_4) {
-        // robot frame:
-        ir_distances_wf[0][i] = cos(anguloSensor)*sm->jubileuInputOutput->DistanciaSensor[i]
-                                +sm->jubileuInputOutput->sensorOffSet[0][i];
-        ir_distances_wf[1][i] = sin(anguloSensor)*sm->jubileuInputOutput->DistanciaSensor[i]
-                                +sm->jubileuInputOutput->sensorOffSet[1][i];
-
-        // Resultante:
-        sm->u_ao[0] += sm->ganhosSensores[i] * ir_distances_wf[0][i];
-        sm->u_ao[1] += sm->ganhosSensores[i] * ir_distances_wf[1][i];
-    }
+    calculaVetorEvitarObstaculoParcial(sm);
 
     // Equilibrio eixo X:
     sm->u_ao[0] -= SENSOR_GANHO_3*200; // 200 ~= 2*70*sqrt(2)
@@ -509,14 +581,47 @@ void calculaVetorAvoidObstacles(t_sm_ControladorHibrido *sm) {
     sm->u_ao[1] = tempY;
 }
 
+void calculaVetorEvitarObstaculoParcial(t_sm_ControladorHibrido *sm) {
+    int i;
+    float anguloSensor;
+    double ir_distances_rf[2][5];
+
+    sm->u_ao[0] = 0;
+    sm->u_ao[1] = 0;
+    for(i=0, anguloSensor = M_PI_2; i<5; i++, anguloSensor-=M_PI_4) {
+        // robot frame:
+        ir_distances_rf[0][i] = cos(anguloSensor)*sm->jubileuInputOutput->DistanciaSensor[i]
+                                +sm->jubileuInputOutput->sensorOffSet[0][i];
+        ir_distances_rf[1][i] = sin(anguloSensor)*sm->jubileuInputOutput->DistanciaSensor[i]
+                                +sm->jubileuInputOutput->sensorOffSet[1][i];
+
+        // Resultante:
+        sm->u_ao[0] += sm->ganhosSensores[i] * ir_distances_rf[0][i];
+        sm->u_ao[1] += sm->ganhosSensores[i] * ir_distances_rf[1][i];
+    }
+}
+
 void verificaSeguirParedeEsquerdaDireita(t_sm_ControladorHibrido *sm) {
     int idx_min, idx_min2;
 
+    /*
+    // Saturar sensores acima de 60 cm para desconsiderar distancias "grandes".
+    volatile double temp[5];
+    int i;
+    for(i=0; i<5; i++) {
+        temp[i] = sm->jubileuInputOutput->DistanciaSensor[i];
+        if(sm->jubileuInputOutput->DistanciaSensor[i] > 60.0 &&
+                sm->jubileuInputOutput->DistanciaSensor[i] <= 80.0) {
+            sm->jubileuInputOutput->DistanciaSensor[i] = 60.0;
+        }
+    }
+    */
+
     // Pegar dois índices referentes às menores distâncias:
     if(sm->fw_direction == SLIDING_RIGHT) {
-        encontraMenoresDistanciasSeguirParede(&sm->jubileuInputOutput->DistanciaSensor[2],&idx_min,&idx_min2);
-        idx_min+=2;
-        idx_min2+=2;
+        encontraMenoresDistanciasSeguirParede(&sm->jubileuInputOutput->DistanciaSensor[4],SENTIDO_COMPARACAO_DIR,&idx_min,&idx_min2);
+        idx_min+=4;
+        idx_min2+=4;
         if(idx_min < idx_min2) {
             //P2 - idx_min
             //P1 - idx_min2
@@ -528,7 +633,7 @@ void verificaSeguirParedeEsquerdaDireita(t_sm_ControladorHibrido *sm) {
         }
         *sm->u_fw = sm->u_fw_r;
     } else {
-        encontraMenoresDistanciasSeguirParede(sm->jubileuInputOutput->DistanciaSensor,&idx_min,&idx_min2);
+        encontraMenoresDistanciasSeguirParede(sm->jubileuInputOutput->DistanciaSensor,SENTIDO_COMPARACAO_ESQ,&idx_min,&idx_min2);
         if(idx_min > idx_min2) {
             //P1 - idx_min2
             //P2 - idx_min
@@ -540,23 +645,30 @@ void verificaSeguirParedeEsquerdaDireita(t_sm_ControladorHibrido *sm) {
         }
         *sm->u_fw = sm->u_fw_l;
     }
+
+    /*
+    // Restaurar valores nao saturados
+    for(i=0; i<5; i++) {
+        sm->jubileuInputOutput->DistanciaSensor[i] = temp[i];
+    }
+    */
 }
 
-void calculaVetorFollowWall(t_sm_ControladorHibrido *sm, int P1, int P2, double resultado[]) {
+void calculaVetorFollowWall(t_sm_ControladorHibrido *sm, int P1, int P2, double resultado[2]) {
     double tempP1[2], modulo;
     double u_fw_p[2], u_fw_t[2];
 
     // Robot Frame:
     // Distância P1:
     tempP1[0] = cos(M_PI_2 - P1*M_PI_4)*sm->jubileuInputOutput->DistanciaSensor[P1]
-                                       +sm->jubileuInputOutput->sensorOffSet[0][P1];
+                                                   + sm->jubileuInputOutput->sensorOffSet[0][P1];
     tempP1[1] = sin(M_PI_2 - P1*M_PI_4)*sm->jubileuInputOutput->DistanciaSensor[P1]
-                                       +sm->jubileuInputOutput->sensorOffSet[1][P1];
+                                                   + sm->jubileuInputOutput->sensorOffSet[1][P1];
     // Distância P2:
     u_fw_t[0] = cos(M_PI_2 - P2*M_PI_4)*sm->jubileuInputOutput->DistanciaSensor[P2]
-                                       +sm->jubileuInputOutput->sensorOffSet[0][P2];
+                                                   + sm->jubileuInputOutput->sensorOffSet[0][P2];
     u_fw_t[1] = sin(M_PI_2 - P2*M_PI_4)*sm->jubileuInputOutput->DistanciaSensor[P2]
-                                       +sm->jubileuInputOutput->sensorOffSet[1][P2];
+                                                   + sm->jubileuInputOutput->sensorOffSet[1][P2];
     // P2 - P1 (vetor paralelo - t de tangente):
     u_fw_t[0] -= tempP1[0];
     u_fw_t[1] -= tempP1[1];
@@ -565,6 +677,8 @@ void calculaVetorFollowWall(t_sm_ControladorHibrido *sm, int P1, int P2, double 
     u_fw_t[0] /= modulo;
     u_fw_t[1] /= modulo;
     // Produto escalar
+    tempP1[0] /= 100;
+    tempP1[1] /= 100;
     modulo = tempP1[0]*u_fw_t[0] + tempP1[1]*u_fw_t[1];
     // Vetor perpendicular à parede:
     u_fw_p[0] = tempP1[0] - ((modulo)*u_fw_t[0]);
@@ -572,8 +686,8 @@ void calculaVetorFollowWall(t_sm_ControladorHibrido *sm, int P1, int P2, double 
 
     // Equilíbrio do vetor perpendicular de acordo com distância desejada:
     modulo = norm(u_fw_p[0],u_fw_p[1]);
-    u_fw_p[0] -= D_FW*u_fw_p[0]/modulo;
-    u_fw_p[1] -= D_FW*u_fw_p[1]/modulo;
+    u_fw_p[0] -= ((double)D_FW/100)*u_fw_p[0]/modulo;
+    u_fw_p[1] -= ((double)D_FW/100)*u_fw_p[1]/modulo;
 
     //Solução: Combinação linear dos vetores paralelo e perpendicular.
     resultado[0] = u_fw_t[0] + 5.5*u_fw_p[0];
@@ -592,20 +706,24 @@ void calculaVetorFollowWall(t_sm_ControladorHibrido *sm, int P1, int P2, double 
 }
 
 uint8_t obstaculoEstaPresente(t_sm_ControladorHibrido *sm) {
-    int i,lim;
     if(sm->fw_direction == SLIDING_RIGHT) {
-        i = 2;
-        lim = 5;
+        // Sensores Direitos (3 e 4)
+        if(sm->jubileuInputOutput->DistanciaSensor[3] < D_SENSOR_SAT) {
+            return 1;
+        }
+        if(sm->jubileuInputOutput->DistanciaSensor[4] < D_SENSOR_SAT) {
+            return 1;
+        }
     } else {
-        i = 0;
-        lim = 3;
-    }
-
-    for(;i<lim; i++) {
-        if(sm->jubileuInputOutput->DistanciaSensor[i] < D_SENSOR_SAT) {
+        // Sensores Esquerdos (0 e 1)
+        if(sm->jubileuInputOutput->DistanciaSensor[0] < D_SENSOR_SAT) {
+            return 1;
+        }
+        if(sm->jubileuInputOutput->DistanciaSensor[1] < D_SENSOR_SAT) {
             return 1;
         }
     }
+
     return 0;
 }
 

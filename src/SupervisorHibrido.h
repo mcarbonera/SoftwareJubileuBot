@@ -10,12 +10,15 @@
 #include "StateMachineGeneric.h"
 #include "StateMachineComm.h"
 
+#define SENTIDO_COMPARACAO_ESQ (int) 1
+#define SENTIDO_COMPARACAO_DIR (int) -1
+
 #define D_STOP 0.15
-#define D_AT_OBS 75
-#define D_UNSAFE 25
-#define D_FW 50
+#define D_AT_OBS 75.0
+#define D_UNSAFE 25.0
+#define D_FW 45.0
 #define D_PROG_EPSILON 0.02
-#define D_SENSOR_SAT 80
+#define D_SENSOR_SAT 80.0
 #define SLIDING_RIGHT 1
 #define SLIDING_LEFT -1
 
@@ -82,15 +85,16 @@ uint8_t checkEventObstacleCleared();
 uint8_t checkEventAtObstacle();
 uint8_t checkEventUnsafe();
 
-void resetController(t_sm_ControladorHibrido *sm);
+void resetController(t_sm_ControladorHibrido *sm, uint8_t resetDProg);
 double norm(double diffX, double diffY);
 void normalizaVetor(double vetorEntrada[2], double vetorNormalizado[2]);
 void calculaParametrosReutilizaveis(t_sm_ControladorHibrido *sm);
-void encontraMenoresDistanciasSeguirParede(volatile double valores[], int *idx_min, int *idx_min2);
+void encontraMenoresDistanciasSeguirParede(volatile double valores[], int sentidoComparacao, int *idx_min, int *idx_min2);
 void calculaVetorGoToGoal(t_sm_ControladorHibrido *sm);
 void calculaVetorAvoidObstacles(t_sm_ControladorHibrido *sm);
+void calculaVetorEvitarObstaculoParcial(t_sm_ControladorHibrido *sm);
 void verificaSeguirParedeEsquerdaDireita(t_sm_ControladorHibrido *sm);
-void calculaVetorFollowWall(t_sm_ControladorHibrido *sm, int P1, int P2, double resultado[]);
+void calculaVetorFollowWall(t_sm_ControladorHibrido *sm, int P1, int P2, double resultado[2]);
 uint8_t obstaculoEstaPresente(t_sm_ControladorHibrido *sm);
 void unicicloParaAcionamentoDiferencialPriorizandoOmega(t_sm_ControladorHibrido *sm);
 void uniToDiff(t_sm_ControladorHibrido *sm, double v, double w);

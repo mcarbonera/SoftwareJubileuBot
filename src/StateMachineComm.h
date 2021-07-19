@@ -44,6 +44,8 @@ typedef struct _sm_{
     Msg_Uart        MensagemUARTData;
 } t_sm_Comm;
 
+#include "main.h"
+
 void Init_SM_Comm(t_sm_Comm *sm);
 void Exec_SM_Comm(t_sm_Comm *sm, unsigned char data);
 void MontaMensagem(t_sm_Comm *sm, char Mensagem[50]);

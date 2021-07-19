@@ -71,10 +71,10 @@
 #define SV_VET_B2_X 0.25
 #define SV_VET_B 0.5
 
-#define SV_VEL_VP_X 0.0
-#define SV_VEL_VM_X 0.5
-#define SV_VEL_VG_X 1.0
-#define SV_VEL_B2 0.5
+#define SV_VEL_VP_X 0.0 // originalmente 0
+#define SV_VEL_VM_X 0.3 //               0.5
+#define SV_VEL_VG_X 0.6 //               1.0
+#define SV_VEL_B2 0.3   //               0.5
 
 typedef enum{
     DIST_P=0,

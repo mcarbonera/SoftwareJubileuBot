@@ -16,6 +16,7 @@ src/StateMachineSupervisores.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.
 src/StateMachineSupervisores.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h
 src/StateMachineSupervisores.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/uart.h
 src/StateMachineSupervisores.obj: ../src/StateMachineGeneric.h
+src/StateMachineSupervisores.obj: ../src/main.h
 src/StateMachineSupervisores.obj: ../src/SupervisorHibrido.h
 src/StateMachineSupervisores.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/math.h
 src/StateMachineSupervisores.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/_ti_config.h
@@ -41,6 +42,7 @@ C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/stdbool.h:
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h: 
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/uart.h: 
 ../src/StateMachineGeneric.h: 
+../src/main.h: 
 ../src/SupervisorHibrido.h: 
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/math.h: 
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/_ti_config.h: 

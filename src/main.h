@@ -29,10 +29,24 @@
  */
 // #define TESTE_MOTOR_RPS
 
+/*
+ * Utilizar filtro de média móvel para os sensores
+ * para compensar quedas de tensão.
+ * Pode-se utilizar filtro RC passivo também!
+ */
+#define USAR_MEDIA_MOVEL_SENSORES
+#define JANELA_MEDIA_MOVEL 5
+
+/*
+ * Evitar todas as Comunicações.
+ * Antissocial igual o dono, bicho.
+ */
+#define EVITAR_COMUNICACOES
+
 #include "StateMachineComm.h"
 
 #define CALCULOS_ODOMETRIA 10
-#define FREQUENCIA_TIMER 10 // 10 Hz
+#define FREQUENCIA_TIMER 10 // Hz
 #define DT (1.0/FREQUENCIA_TIMER)
 #define JUBILEU_R 0.034
 #define JUBILEU_L 0.18
@@ -42,6 +56,8 @@
 #define JUBILEU_MIN_VEL (JUBILEU_MIN_RPM*2.0*M_PI/60.0) // 6.2832 rad/s    ==  0.21363708953606095 m/s
 #define JUBILEU_MAX_VEL (JUBILEU_MAX_RPM*2.0*M_PI/60.0) // 17.4358 rad/s   ==  0.593063493182867 m/s
 
+#define JUBILEU_VEL (0.5f)
+
 typedef struct JDInputOutput {
     double ObjX, ObjY;
     double CoordX, CoordY, CoordTheta;
@@ -49,6 +65,10 @@ typedef struct JDInputOutput {
     double vel_r, vel_l;
     double motorEsquerdo, motorDireito;
     volatile double DistanciaSensor[5]; // retorno calculado (cm)
+    #ifdef USAR_MEDIA_MOVEL_SENSORES
+    volatile double DistanciaSensorMediaMovel[5][JANELA_MEDIA_MOVEL];
+    int iteracaoMediaMovel;
+    #endif
     float sensorOffSet[2][5];
     t_sm_Comm *stateMachineComm; // para solicitar envio de dados durante execução de controlador (debug)
 } JDInputOutput;

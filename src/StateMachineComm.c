@@ -5,8 +5,7 @@ static void fn_ESPERAMENSAGEMCLIENTE(t_sm_Comm *sm, unsigned char data)
 {
     if(data == EV_MENSAGEMRECEBIDA)
     {
-        if(temMensagem(sm) && VerificaResposta(sm,"SETCOORDOBJ(_.__,_.__)"))
-        {
+        if(temMensagem(sm) && VerificaResposta(sm,"SETCOORDOBJ(_.__,_.__)")) {
             sm->state = ST_RESPONDECLIENTE_SETCOORDOBJ;
         } else if(temMensagem(sm) && VerificaResposta(sm,"GETSTATE")) {
             sm->state = ST_RESPONDECLIENTE_GETSTATE;
@@ -164,10 +163,12 @@ void EnviarMensagemUart(t_sm_Comm *sm)
     {
         for(i=0;i<sm->MensagemUARTData.MensagemWifiEnvIdx; i++)
         {
+            #ifndef EVITAR_COMUNICACOES
             #ifdef DEBUG_ACTIVE
             UARTCharPut(UART0_BASE, sm->MensagemUARTData.MensagemWifiEnv[i]); // DEBUG
             #endif
             UARTCharPut(UART3_BASE, sm->MensagemUARTData.MensagemWifiEnv[i]);
+            #endif
         }
     }
     sm->MensagemUARTData.MensagemWifiEnvIdx = 0;

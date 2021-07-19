@@ -21,6 +21,8 @@ src/SupervisorHibrido.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LT
 src/SupervisorHibrido.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h
 src/SupervisorHibrido.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/uart.h
 src/SupervisorHibrido.obj: ../src/StateMachineGeneric.h
+src/SupervisorHibrido.obj: ../src/main.h
+src/SupervisorHibrido.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/gpio.h
 
 ../src/SupervisorHibrido.c: 
 ../src/SupervisorHibrido.h: 
@@ -43,3 +45,5 @@ C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/stdbool.h:
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h: 
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/uart.h: 
 ../src/StateMachineGeneric.h: 
+../src/main.h: 
+C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/gpio.h: 

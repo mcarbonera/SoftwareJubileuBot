@@ -248,6 +248,13 @@ int main(void)
 
     while(1)
     {
+        /* Iteração índice Média Movel */
+        #ifdef USAR_MEDIA_MOVEL_SENSORES
+        if(++JubileuData.jubileuInputOutput.iteracaoMediaMovel == JANELA_MEDIA_MOVEL) {
+            JubileuData.jubileuInputOutput.iteracaoMediaMovel = 0;
+        }
+        #endif
+
         /* Cálculo do polinômio - Sensores Infravermelho */
         while(!retornoADC.ADC1Calculado);
         retornoADC.ADC1Calculado = 0;
@@ -294,12 +301,14 @@ int main(void)
         }
 
         /* Cálculo controlador */
-        JubileuData.jubileuInputOutput.v = 1;
+        JubileuData.jubileuInputOutput.v = JUBILEU_VEL;
         Exec_SM_Supervisor_Supervisor(&JubileuData.supervisores);
 
+        /* Valor Arbitrario */
+        //JubileuData.jubileuInputOutput.motorEsquerdo = 0.36584200941537831; // 0.36584200941537831
+        //JubileuData.jubileuInputOutput.motorDireito = 0.64627209609746961; // 0.64627209609746961
         /* Acionamento dos motores */
         AcionarMotor(JubileuData.jubileuInputOutput.motorEsquerdo, JubileuData.jubileuInputOutput.motorDireito);
-        //AlterarAcionamento();
 
         /* Informa transição de controlador, se necessário */
         if(StateMachineComm.state==ST_RESPONDECLIENTE_MUDACONTROLADOR) {
@@ -368,6 +377,15 @@ void InicializaStructRobo(t_sm_Comm *sm)
     JubileuData.jubileuInputOutput.CoordX = 0;
     JubileuData.jubileuInputOutput.CoordY = 0;
     JubileuData.jubileuInputOutput.CoordTheta = 0;
+    #ifdef USAR_MEDIA_MOVEL_SENSORES
+    int j;
+    for(i=0; i<5; i++) {
+        for(j=0; j<JANELA_MEDIA_MOVEL; j++) {
+            JubileuData.jubileuInputOutput.DistanciaSensorMediaMovel[i][j] = 80.0;
+        }
+    }
+    JubileuData.jubileuInputOutput.iteracaoMediaMovel = 0;
+    #endif
     PreparaStringEstado(JubileuData.CoordString, "00.00,00.00,00.00,00.00,00.00,00.00,00.00,00.00\r\n");
     PreparaStringEstado(JubileuData.ControladorStr, "Novo controlador selecionado: \n");
 
@@ -377,6 +395,7 @@ void InicializaStructRobo(t_sm_Comm *sm)
 
     retornoADC.ADC0Calculado=0;
     retornoADC.ADC1Calculado=0;
+
     /* Leds
     GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0|GPIO_PIN_1, 0xFF); // LEDs on
     SysCtlDelay(ui32SysClkFreq / (1)); // delay 1 sec
@@ -638,6 +657,28 @@ void calcularDistanciasSensores(int idxInicio, int idxFim)
     for(i=idxInicio; i<idxFim; i++)
     {
         temp = retornoADC.Sensor[i]*IR_COEFF_K;
+
+        #ifdef USAR_MEDIA_MOVEL_SENSORES
+        int j;
+        JubileuData.jubileuInputOutput
+        .DistanciaSensorMediaMovel[i][JubileuData.jubileuInputOutput.iteracaoMediaMovel] =
+                IR_COEFF_A*temp*temp*temp*temp*temp*temp +
+                IR_COEFF_B*temp*temp*temp*temp*temp +
+                IR_COEFF_C*temp*temp*temp*temp +
+                IR_COEFF_D*temp*temp*temp +
+                IR_COEFF_E*temp*temp +
+                IR_COEFF_F*temp +
+                IR_COEFF_G;
+        if(JubileuData.jubileuInputOutput.DistanciaSensorMediaMovel[i][JubileuData.jubileuInputOutput.iteracaoMediaMovel] > 80.0) {
+            JubileuData.jubileuInputOutput.DistanciaSensorMediaMovel[i][JubileuData.jubileuInputOutput.iteracaoMediaMovel] = 80.0;
+        }
+
+        JubileuData.jubileuInputOutput.DistanciaSensor[i] = 0;
+        for(j=0; j<JANELA_MEDIA_MOVEL; j++) {
+            JubileuData.jubileuInputOutput.DistanciaSensor[i] +=
+                    JubileuData.jubileuInputOutput.DistanciaSensorMediaMovel[i][j]/JANELA_MEDIA_MOVEL;
+        }
+        #else
         JubileuData
         .jubileuInputOutput
         .DistanciaSensor[i] =   IR_COEFF_A*temp*temp*temp*temp*temp*temp +
@@ -651,6 +692,7 @@ void calcularDistanciasSensores(int idxInicio, int idxFim)
         if(JubileuData.jubileuInputOutput.DistanciaSensor[i] > 80.0) {
             JubileuData.jubileuInputOutput.DistanciaSensor[i] = 80.0;
         }
+        #endif
     }
 }
 

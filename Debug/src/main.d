@@ -15,6 +15,7 @@ src/main.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/std
 src/main.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h
 src/main.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/uart.h
 src/main.obj: ../src/StateMachineGeneric.h
+src/main.obj: ../src/main.h
 src/main.obj: C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/tm4c1294ncpdt.h
 src/main.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/math.h
 src/main.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/_ti_config.h
@@ -52,6 +53,7 @@ C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/stdbool.h:
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/hw_memmap.h: 
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/uart.h: 
 ../src/StateMachineGeneric.h: 
+../src/main.h: 
 C:/Users/Luiz/workspace_v9/JubileuBot/driverlib/inc/tm4c1294ncpdt.h: 
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/math.h: 
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/_ti_config.h: 

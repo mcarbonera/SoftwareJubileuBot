@@ -11,7 +11,7 @@ static void fn_STOP(t_sm_ControladorFuzzy *sm) {
 
 static void fn_FUZZY(t_sm_ControladorFuzzy *sm) {
     if(checkEventAtGoalFuzzy(sm)) {
-            sm->controladorAtual = ST_STOP_FUZZY;
+        sm->controladorAtual = ST_STOP_FUZZY;
     }
 }
 
@@ -184,7 +184,7 @@ void calculaSPFuzzy(t_sm_ControladorFuzzy *sm) {
 
         compensaDistanciaSP = sm->spFis.recDistVet[0] + sm->spFis.recDistVet[1] * 2.5;
         sm->SP_Vet[0] = sm->spFis.recSPVet[0] * 3;
-        sm->SP_Vet[1] = compensaDistanciaSP + sm->spFis.recSPVet[1] * 3;
+        sm->SP_Vet[1] = compensaDistanciaSP + sm->spFis.recSPVet[1] * 2;
 
         sm->SP_Vet[0] += sm->EO_Vet[0];
         sm->SP_Vet[1] += sm->EO_Vet[1];
@@ -220,6 +220,7 @@ void verificarPerdaDeReferencia(t_sm_ControladorFuzzy *sm) {
 }
 
 void normalizarEntradasVetor(double vetor[2]) {
+    /*
     double vetorAbs[2];
     vetorAbs[0] = fabs(vetor[0]);
     vetorAbs[1] = fabs(vetor[1]);
@@ -230,6 +231,18 @@ void normalizarEntradasVetor(double vetor[2]) {
     if(vetorAbs[1] > 1) {
         vetor[0] /= vetorAbs[1];
         vetor[1] /= vetorAbs[1];
+    }
+    */
+    double vetorAbs;
+    vetorAbs = fabs(vetor[0]);
+    if(vetorAbs > 1) {
+        vetor[0] /= vetorAbs;
+        vetor[1] /= vetorAbs;
+    }
+    vetorAbs = fabs(vetor[1]);
+    if(vetorAbs > 1) {
+        vetor[0] /= vetorAbs;
+        vetor[1] /= vetorAbs;
     }
 }
 
@@ -253,7 +266,7 @@ void calculaRecomendacaoFinal(t_sm_ControladorFuzzy *sm) {
     double alpha = 1.6;
     double coeffAtivacao = fmin(fmax(sm->ativacaoSP, ATIVACAO_MARGEM), ATIVACAO_PASSOS-ATIVACAO_MARGEM);
 
-    coeffAtivacao /= ATIVACAO_PASSOS - 2*ATIVACAO_MARGEM;
+    coeffAtivacao /= (ATIVACAO_PASSOS - 2*ATIVACAO_MARGEM);
 
     for(i=0; i<2; i++) {
         sm->recFinal[i] = sm->IPO_Vet[i] + alpha * sm->EO_Vet[i];
